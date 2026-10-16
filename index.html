@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PATIENT ZERO — Escape Game</title>
+  <style>
+    :root {
+      --accent: #9be15d;
+      --accent-soft: rgba(155, 225, 93, 0.15);
+      --danger: #ff4d4d;
+      --text: #f2f2f2;
+      --muted: #8a8a8a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: #000;
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100%;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 56px;
+      text-align: center;
+    }
+
+    /* ---------- Logo ---------- */
+    .logo {
+      width: min(300px, 80vw);
+      height: auto;
+      margin-bottom: 28px;
+    }
+
+    /* ---------- Boutons ---------- */
+    .btn {
+      display: inline-block;
+      width: min(100%, 420px);
+      padding: 16px 20px;
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      background: var(--accent);
+      color: #000;
+      box-shadow: 0 0 18px rgba(155, 225, 93, 0.5);
+      outline: none;
+    }
+
+    /* Effet "tilt" sur le texte */
+    .tilt {
+      display: inline-block;
+      animation: tilt 1.6s ease-in-out infinite;
+    }
+
+    @keyframes tilt {
+      0%, 100% { transform: rotate(-4deg); }
+      50%      { transform: rotate(4deg); }
+    }
+
+    /* ---------- Phase 1 ---------- */
+    #phase1 {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    #briefing {
+      width: min(100%, 360px);
+      aspect-ratio: 9 / 16;
+      object-fit: contain;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 8px;
+    }
+
+    /* ---------- Phase 2 ---------- */
+    #phase2 {
+      width: 100%;
+      max-width: 620px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .timer {
+      font-family: "Courier New", Courier, monospace;
+      font-size: clamp(3rem, 14vw, 5.5rem);
+      font-weight: 700;
+      color: var(--accent);
+      text-shadow: 0 0 18px rgba(155, 225, 93, 0.45);
+      letter-spacing: 0.05em;
+    }
+
+    .timer.over {
+      color: var(--danger);
+      text-shadow: 0 0 18px rgba(255, 77, 77, 0.5);
+    }
+
+    .timer-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: -20px;
+    }
+
+    .counter-block {
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 16px 24px;
+      width: 100%;
+      background: #0a0a0a;
+    }
+
+    .counter-label {
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+      color: var(--text);
+    }
+
+    .counter-value {
+      display: block;
+      margin-top: 6px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .intro-text {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    .intro-text strong {
+      color: var(--accent);
+    }
+
+    .hints {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .hint-btn {
+      width: 100%;
+      font-size: 0.85rem;
+      padding: 14px 16px;
+      text-align: left;
+    }
+
+    .hint-btn::after {
+      content: "▸";
+      float: right;
+      transition: transform 0.2s;
+    }
+
+    .hint-btn[aria-expanded="true"]::after {
+      transform: rotate(90deg);
+    }
+
+    .hint-text {
+      width: 100%;
+      margin-top: -6px;
+      padding: 16px 18px;
+      background: var(--accent-soft);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 0 4px 4px;
+      font-size: 0.98rem;
+      line-height: 1.6;
+      text-align: left;
+      white-space: pre-line;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <img class="logo" src="PATIENT-ZERO-LOGO.png" alt="PATIENT ZERO">
+
+  <!-- ================= PHASE 1 : BRIEFING ================= -->
+  <section id="phase1">
+    <button id="btnBriefing" class="btn" type="button">
+      <span class="tilt">LANCER LA VIDÉO DE BRIEFING</span>
+    </button>
+
+    <video id="briefing" src="video-briefing.mp4" playsinline controls hidden></video>
+
+    <button id="btnStart" class="btn" type="button" hidden>
+      <span class="tilt">DÉMARRER LA MISSION</span>
+    </button>
+  </section>
+
+  <!-- ================= PHASE 2 : MISSION ================= -->
+  <section id="phase2" hidden>
+    <div>
+      <div id="timer" class="timer">60:00</div>
+      <div class="timer-label">Temps restant</div>
+    </div>
+
+    <div class="counter-block">
+      <div class="counter-label">NOMBRE D'INDICES CONSULTÉS :</div>
+      <span id="hintCount" class="counter-value">0</span>
+    </div>
+
+    <p class="intro-text">
+      Pour commencer votre mission, <strong>ouvrez la malle</strong>.<br>
+      Bon courage, l'humanité compte sur vous !
+    </p>
+
+    <div id="hints" class="hints"></div>
+  </section>
+
+<script>
+  /* ============================================================
+     DONNÉES DES INDICES
+     ============================================================ */
+  const ENIGMES = [
+    {
+      titre: "PHASE 01 — PROTOCOLE",
+      indices: [
+        "Consultez les observations brutes et recherchez les trois effets mentionnés dans le protocole.",
+        "Sélectionnez les fioles rouge, jaune et verte, dans cet ordre. Lisez les numéros ACT inscrits sur leurs étiquettes pour reconstituer le code."
+      ]
+    },
+    {
+      titre: "PHASE 02 — TRANSFUSION",
+      indices: [
+        "Conservez uniquement les actes du patient Z-01 et remettez-les dans l'ordre chronologique. Les volumes des poches sont écrits dans un alphabet particulier.",
+        "Déchiffrez les volumes en braille des poches P-09, P-17 et P-23. Additionnez les injections et soustrayez le prélèvement pour obtenir le code.",
+        "Effectuez le calcul suivant : 400 − 284 + 310."
+      ]
+    },
+    {
+      titre: "PHASE 03 — AUTOPSIE",
+      indices: [
+        "Retrouvez les trois parties du squelette décrites dans la note. Une lumière particulière vous permettra de découvrir leurs identifiants.",
+        "Utilisez la lampe UV sur le crâne, la main et le pied, dans cet ordre.",
+        "Retrouvez les identifiants N-12, N-09 et N-02 dans le carnet d'autopsie et relevez les indices correspondants, dans cet ordre."
+      ]
+    },
+    {
+      titre: "PHASE 04 — SPÉCIMENS INFECTÉS",
+      indices: [
+        "Utilisez la balance pour identifier les trois bocaux les plus lourds. Leur ordre est essentiel pour retrouver la combinaison.",
+        "Les bocaux à conserver sont ceux contenant l'œil, le cerveau et le cœur. Classez-les du plus léger au plus lourd et relevez leur numéro d'expérience dans cet ordre."
+      ]
+    },
+    {
+      titre: "PHASE 05 — SYNTHÈSE INTERDITE",
+      indices: [
+        "Avant d'injecter l'antidote, le patient Z-01 doit être stabilisé. Un dispositif composé de plusieurs boutons permet d'activer le protocole de soins. Retrouvez-le et consultez les instructions du professeur.",
+        "Pour stabiliser le patient Z-01, activez les boutons dans cet ordre : rouge deux fois, bleu une fois, vert trois fois, puis bleu deux fois. Respectez cette séquence pour déclencher le protocole final.",
+        "Le message du professeur fait référence à quatre éléments essentiels. Pour retrouver les chiffres du dernier verrou, pensez à la durée du traitement, comptez les compagnons à plumes, examinez le dessous de la fiole contenant le poison et observez attentivement le pied gauche du patient Z-01."
+      ]
+    }
+  ];
+
+  const DUREE_MISSION = 60 * 60 * 1000; // 60 minutes en ms
+
+  /* ============================================================
+     ÉLÉMENTS DU DOM
+     ============================================================ */
+  const btnBriefing = document.getElementById("btnBriefing");
+  const video       = document.getElementById("briefing");
+  const btnStart    = document.getElementById("btnStart");
+  const phase1      = document.getElementById("phase1");
+  const phase2      = document.getElementById("phase2");
+  const timerEl     = document.getElementById("timer");
+  const timerLabel  = document.querySelector(".timer-label");
+  const countEl     = document.getElementById("hintCount");
+  const hintsEl     = document.getElementById("hints");
+
+  /* ============================================================
+     PHASE 1 — VIDÉO DE BRIEFING
+     ============================================================ */
+  btnBriefing.addEventListener("click", () => {
+    btnBriefing.hidden = true;
+    video.hidden = false;
+    video.play().catch(() => { /* lecture refusée : le joueur peut utiliser les contrôles */ });
+  });
+
+  // Une fois la vidéo terminée, on affiche le bouton de démarrage
+  video.addEventListener("ended", showStartButton);
+
+  // Sécurité : si la vidéo ne charge pas, on affiche quand même le bouton
+  video.addEventListener("error", showStartButton);
+
+  function showStartButton() {
+    btnStart.hidden = false;
+  }
+
+  /* ============================================================
+     PASSAGE EN PHASE 2
+     ============================================================ */
+  btnStart.addEventListener("click", () => {
+    phase1.hidden = true;
+    phase2.hidden = false;
+    buildHints();
+    startTimer();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  /* ============================================================
+     DÉCOMPTE 60 MINUTES
+     ============================================================ */
+  let endAt = 0;
+  let timerId = null;
+
+  function startTimer() {
+    endAt = Date.now() + DUREE_MISSION;
+    updateTimer();
+    timerId = setInterval(updateTimer, 250);
+  }
+
+  function updateTimer() {
+    const restant = Math.max(0, endAt - Date.now());
+    const totalSec = Math.ceil(restant / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+
+    timerEl.textContent =
+      String(min).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+
+    if (restant === 0) {
+      clearInterval(timerId);
+      timerEl.classList.add("over");
+      timerLabel.textContent = "Temps écoulé";
+    }
+  }
+
+  /* ============================================================
+     INDICES & COMPTEUR
+     ============================================================ */
+  let compteur = 0;
+
+  function incrementCount() {
+    compteur += 1;
+    countEl.textContent = compteur;
+  }
+
+  function buildHints() {
+    ENIGMES.forEach((enigme) => {
+      enigme.indices.forEach((texte, i) => {
+        const wrap = document.createElement("div");
+        wrap.className = "hint";
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn hint-btn";
+        btn.setAttribute("aria-expanded", "false");
+        btn.textContent = `${enigme.titre} · INDICE ${i + 1}`;
+
+        const panel = document.createElement("div");
+        panel.className = "hint-text";
+        panel.textContent = texte;
+        panel.hidden = true;
+
+        // Un indice n'est comptabilisé qu'une seule fois, à sa première consultation
+        let consulte = false;
+
+        btn.addEventListener("click", () => {
+          const ouvrir = panel.hidden;
+          panel.hidden = !ouvrir;
+          btn.setAttribute("aria-expanded", String(ouvrir));
+          if (ouvrir && !consulte) {
+            consulte = true;
+            incrementCount();
+          }
+        });
+
+        wrap.append(btn, panel);
+        hintsEl.append(wrap);
+      });
+    });
+  }
+</script>
+</body>
+</html>
